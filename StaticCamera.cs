@@ -8,6 +8,8 @@ using InControl;
 using UnityEngine;
 using CamControllerCameraMode = CameraController.CameraMode;
 using CamTargetMode = CameraTarget.TargetMode;
+using UnityEngine.SceneManagement;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace StaticCamera {
     public class StaticCamera: Mod, ICustomMenuMod, ILocalSettings<LocalSettings> {
@@ -15,7 +17,6 @@ namespace StaticCamera {
         public static StaticCamera instance;
         private static CameraController cameraController = null;
         internal static readonly FieldInfo cameraGameplayScene = typeof(CameraController).GetField("isGameplayScene", BindingFlags.Instance | BindingFlags.NonPublic);
-        // internal static readonly FieldInfo cameraLockAreaBox2d = typeof(CameraLockArea).GetField("box2d", BindingFlags.Instance | BindingFlags.NonPublic);
         private HashSet<CameraLockArea> activeCameraLockAreas = new HashSet<CameraLockArea>();
         private bool isStatic = false;
         private CamControllerCameraMode? prevCamCtrlMode = null;
@@ -32,7 +33,7 @@ namespace StaticCamera {
             Log("Initializing");
 
             ModHooks.HeroUpdateHook += HeroUpdate;
-            ModHooks.SceneChanged += SceneChanged;
+            USceneManager.activeSceneChanged += SceneChanged;
             debugModInteraction = new DebugModInteraction();
             isDebugModInstalled = debugModInteraction.IsDebugModInstalled();
 
@@ -78,18 +79,8 @@ namespace StaticCamera {
         }
 
         private void ModifyCameraLockAreas(bool enabled = false) {
-            if (!enabled) {
-                foreach (CameraLockArea cameraLockArea in UnityEngine.Object.FindObjectsOfType<CameraLockArea>()) {
-                    cameraLockArea.gameObject.GetComponent<Collider2D>().enabled = false;
-                }
-            } else {
-                foreach (CameraLockArea cameraLockArea in UnityEngine.Object.FindObjectsOfType<CameraLockArea>(true)) {
-                    GameObject cameraLockAreaGameObj = cameraLockArea.gameObject;
-                    if (activeCameraLockAreas.Contains(cameraLockArea)) {
-                        cameraLockAreaGameObj.GetComponent<Collider2D>().enabled = true;
-                        cameraLockAreaGameObj.SetActive(true);
-                    }
-                }
+            foreach (CameraLockArea cameraLockArea in Object.FindObjectsOfType<CameraLockArea>(true)) {
+                cameraLockArea.gameObject.GetComponent<Collider2D>().enabled = enabled;
             }
         }
 
@@ -121,9 +112,9 @@ namespace StaticCamera {
             }
         }
 
-        public void SceneChanged(string _) {
+        public void SceneChanged(Scene from, Scene to) {
             activeCameraLockAreas = new HashSet<CameraLockArea>();
-            foreach (CameraLockArea cameraLockArea in UnityEngine.Object.FindObjectsOfType<CameraLockArea>()) {
+            foreach (CameraLockArea cameraLockArea in Object.FindObjectsOfType<CameraLockArea>()) {
                 activeCameraLockAreas.Add(cameraLockArea);
             }
 

@@ -3,8 +3,8 @@ using Modding;
 
 namespace StaticCamera {
     public class DebugModInteraction {
-        internal static readonly FieldInfo cameraFollow = typeof(DebugMod.DebugMod).GetField("cameraFollow", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static);
-        private IMod debugModInstance = ModHooks.GetMod("DebugMod");
+        private static readonly FieldInfo cameraFollow = typeof(DebugMod.DebugMod).GetField("cameraFollow", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static);
+        private static readonly IMod debugModInstance = ModHooks.GetMod("DebugMod");
         
         public bool IsDebugModInstalled() => debugModInstance is Mod;
 
