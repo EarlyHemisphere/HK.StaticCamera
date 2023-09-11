@@ -17,13 +17,14 @@ namespace StaticCamera {
         public static StaticCamera instance;
         private static CameraController cameraController = null;
         internal static readonly FieldInfo cameraGameplayScene = typeof(CameraController).GetField("isGameplayScene", BindingFlags.Instance | BindingFlags.NonPublic);
-        private HashSet<CameraLockArea> activeCameraLockAreas = new HashSet<CameraLockArea>();
         private bool isStatic = false;
         private CamControllerCameraMode? prevCamCtrlMode = null;
         private CamTargetMode? prevCamTargetMode = null;
         private bool wasCameraFollow = false;
+        // private bool wasStaticBeforeSceneChange = false;
         private DebugModInteraction debugModInteraction;
         private bool isDebugModInstalled;
+        // private bool heroInPositionHookAdded = false;
 
         public StaticCamera(): base ("Static Camera") {
             instance = this;
@@ -33,7 +34,7 @@ namespace StaticCamera {
             Log("Initializing");
 
             ModHooks.HeroUpdateHook += HeroUpdate;
-            USceneManager.activeSceneChanged += SceneChanged;
+            ModHooks.BeforeSceneLoadHook += UnlockForSceneChange;
             debugModInteraction = new DebugModInteraction();
             isDebugModInstalled = debugModInteraction.IsDebugModInstalled();
 
@@ -67,6 +68,11 @@ namespace StaticCamera {
             if (cameraController == null) {
                 cameraController = GameManager.instance.cameraCtrl;
             }
+
+            // if (!heroInPositionHookAdded && HeroController.instance) {
+            //     HeroController.instance.heroInPosition += HeroInPosition;
+            //     heroInPositionHookAdded = true;
+            // }
 
             if (localSettings.keyBinds.ToggleStaticCamera.WasPressed) {
                 ToggleStaticCamera();
@@ -112,14 +118,20 @@ namespace StaticCamera {
             }
         }
 
-        public void SceneChanged(Scene from, Scene to) {
-            activeCameraLockAreas = new HashSet<CameraLockArea>();
-            foreach (CameraLockArea cameraLockArea in Object.FindObjectsOfType<CameraLockArea>()) {
-                activeCameraLockAreas.Add(cameraLockArea);
+        // public void HeroInPosition(bool _) {
+        //     if (wasStaticBeforeSceneChange) {
+        //         ToggleStaticCamera();
+        //         wasStaticBeforeSceneChange = false;
+        //     }
+        // }
+
+        public string UnlockForSceneChange(string sceneName) {
+            if (isStatic) {
+                ToggleStaticCamera();
+                // wasStaticBeforeSceneChange = true;
             }
 
-            isStatic = !isStatic;
-            ToggleStaticCamera();
+            return sceneName;
         }
     }
 
