@@ -1,14 +1,31 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using Modding;
 
 namespace StaticCamera {
-    public class DebugModInteraction {
+    internal class DebugModInteraction {
+        private DebugMod.DebugMod debugModInstance = null;
         private static readonly FieldInfo cameraFollow = typeof(DebugMod.DebugMod).GetField("cameraFollow", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Static);
-        private static readonly IMod debugModInstance = ModHooks.GetMod("DebugMod");
-        
-        public bool IsDebugModInstalled() => debugModInstance is Mod;
 
-        public bool IsCameraFollowEnabled() => (bool)cameraFollow.GetValue((DebugMod.DebugMod)debugModInstance);
+        public void Initialize() {
+            try {
+                FileInfo dllFile = new FileInfo(@"hollow_knight_Data/Managed/Assembly-CSharp.dll");
+                Assembly assembly = Assembly.LoadFrom(dllFile.FullName);
+                Type modLoaderType = assembly.GetType("Modding.ModLoader");
+                FieldInfo loadedModsFieldInfo = modLoaderType.GetField("LoadedMods", BindingFlags.Public | BindingFlags.Static);
+                List<IMod> loadedMods = (List<IMod>)loadedModsFieldInfo.GetValue(null);
+                debugModInstance = (DebugMod.DebugMod)loadedMods.FirstOrDefault(mod => mod.GetName().Equals("DebugMod"));
+            } catch (Exception e) {
+                Modding.Logger.Log("Failed to access DebugMod instance");
+                Modding.Logger.Log(e);
+            }
+        }
+        public bool IsDebugModInstalled() => debugModInstance != null;
+
+        public bool IsCameraFollowEnabled() => (bool)cameraFollow.GetValue(debugModInstance);
 
         public void ToggleCameraFollow() => DebugMod.BindableFunctions.ForceCameraFollow();
     }

@@ -1,68 +1,49 @@
 using Modding;
-using Modding.Converters;
-using Newtonsoft.Json;
-using Satchel.BetterMenus;
 using System.Reflection;
-using System.Collections.Generic;
-using InControl;
 using UnityEngine;
 using CamControllerCameraMode = CameraController.CameraMode;
 using CamTargetMode = CameraTarget.TargetMode;
-using UnityEngine.SceneManagement;
-using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace StaticCamera {
-    public class StaticCamera: Mod, ICustomMenuMod, ILocalSettings<LocalSettings> {
-        private Menu menuRef;
+    public class StaticCamera: Mod {
         public static StaticCamera instance;
         private static CameraController cameraController = null;
         internal static readonly FieldInfo cameraGameplayScene = typeof(CameraController).GetField("isGameplayScene", BindingFlags.Instance | BindingFlags.NonPublic);
         private bool isStatic = false;
-        private CamControllerCameraMode? prevCamCtrlMode = null;
-        private CamTargetMode? prevCamTargetMode = null;
+        private CamControllerCameraMode? prevCamCtrlMode;
+        private CamTargetMode? prevCamTargetMode;
         private bool wasCameraFollow = false;
         // private bool wasStaticBeforeSceneChange = false;
         private DebugModInteraction debugModInteraction;
         private bool isDebugModInstalled;
         // private bool heroInPositionHookAdded = false;
 
+        public LocalSettings localSettings = new LocalSettings();
+        public override ModSettings GlobalSettings
+        {
+            get => localSettings;
+            set => localSettings = (LocalSettings) value;
+        }
+
         public StaticCamera(): base ("Static Camera") {
             instance = this;
         }
 
+        public override int LoadPriority() => 10000; // Load after DebugMod
+
         public override void Initialize() {
             Log("Initializing");
 
-            ModHooks.HeroUpdateHook += HeroUpdate;
-            ModHooks.BeforeSceneLoadHook += UnlockForSceneChange;
+            ModHooks.Instance.HeroUpdateHook += HeroUpdate;
+            ModHooks.Instance.BeforeSceneLoadHook += UnlockForSceneChange;
             debugModInteraction = new DebugModInteraction();
+            debugModInteraction.Initialize();
             isDebugModInstalled = debugModInteraction.IsDebugModInstalled();
 
             Log("Initialized");
         }
 
         public override string GetVersion() => GetType().Assembly.GetName().Version.ToString();
-
-        public bool ToggleButtonInsideMenu => false;
-
-        public static LocalSettings localSettings { get; private set; } = new();
-        public void OnLoadLocal(LocalSettings s) => localSettings = s;
-        public LocalSettings OnSaveLocal() => localSettings;
-
-        public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
-            menuRef ??= new Menu(
-                name: "Key Binds",
-                elements: new Element[] {
-                    Blueprints.KeyAndButtonBind(
-                        name: "Toggle Static Camera",
-                        keyBindAction: localSettings.keyBinds.ToggleStaticCamera,
-                        buttonBindAction: localSettings.keyBinds.ToggleStaticCamera
-                    )
-                }
-            );
-
-            return menuRef.GetMenuScreen(modListMenu);
-        }
 
         public void HeroUpdate() {
             if (cameraController == null) {
@@ -74,7 +55,7 @@ namespace StaticCamera {
             //     heroInPositionHookAdded = true;
             // }
 
-            if (localSettings.keyBinds.ToggleStaticCamera.WasPressed) {
+            if (Input.GetKeyDown((KeyCode)System.Enum.Parse(typeof(KeyCode), localSettings.ToggleStaticCameraKey, true))) {
                 ToggleStaticCamera();
             }
 
@@ -85,7 +66,7 @@ namespace StaticCamera {
         }
 
         private void ModifyCameraLockAreas(bool enabled = false) {
-            foreach (CameraLockArea cameraLockArea in Object.FindObjectsOfType<CameraLockArea>(true)) {
+            foreach (CameraLockArea cameraLockArea in (CameraLockArea[])Resources.FindObjectsOfTypeAll(typeof(CameraLockArea))) {
                 cameraLockArea.gameObject.GetComponent<Collider2D>().enabled = enabled;
             }
         }
@@ -135,16 +116,7 @@ namespace StaticCamera {
         }
     }
 
-    public class LocalSettings {
-        [JsonConverter(typeof(PlayerActionSetConverter))]
-        public KeyBinds keyBinds = new KeyBinds();
-    }
-
-    public class KeyBinds : PlayerActionSet {
-        public PlayerAction ToggleStaticCamera;
-
-        public KeyBinds() {
-            ToggleStaticCamera = CreatePlayerAction("ToggleStaticCamera");
-        }
+    public class LocalSettings: ModSettings {
+        public string ToggleStaticCameraKey = KeyCode.G.ToString();
     }
 }
