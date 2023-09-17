@@ -19,8 +19,8 @@ namespace StaticCamera {
                 List<IMod> loadedMods = (List<IMod>)loadedModsFieldInfo.GetValue(null);
                 debugModInstance = (DebugMod.DebugMod)loadedMods.FirstOrDefault(mod => mod.GetName().Equals("DebugMod"));
             } catch (Exception e) {
-                Modding.Logger.Log("Failed to access DebugMod instance");
-                Modding.Logger.Log(e);
+                Logger.Log("Failed to access DebugMod instance");
+                Logger.Log(e);
             }
         }
         public bool IsDebugModInstalled() => debugModInstance != null;

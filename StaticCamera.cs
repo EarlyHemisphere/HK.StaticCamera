@@ -16,7 +16,6 @@ namespace StaticCamera {
         // private bool wasStaticBeforeSceneChange = false;
         private DebugModInteraction debugModInteraction;
         private bool isDebugModInstalled;
-        // private bool heroInPositionHookAdded = false;
 
         public LocalSettings localSettings = new LocalSettings();
         public override ModSettings GlobalSettings
