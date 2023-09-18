@@ -1,5 +1,4 @@
 using Modding;
-using GlobalEnums;
 using System.Reflection;
 using UnityEngine;
 using CamControllerCameraMode = CameraController.CameraMode;
@@ -22,11 +21,11 @@ namespace StaticCamera {
         private DebugModInteraction debugModInteraction;
         private bool isDebugModInstalled;
 
-        public LocalSettings localSettings = new LocalSettings();
+        public GlobalSettings globalSettings = new GlobalSettings();
         public override ModSettings GlobalSettings
         {
-            get => localSettings;
-            set => localSettings = (LocalSettings) value;
+            get => globalSettings;
+            set => globalSettings = (GlobalSettings) value;
         }
 
         public StaticCamera(): base ("Static Camera") {
@@ -63,7 +62,7 @@ namespace StaticCamera {
                 }
             }
 
-            if (Input.GetKeyDown((KeyCode)System.Enum.Parse(typeof(KeyCode), localSettings.ToggleStaticCameraKey, true))) {
+            if (Input.GetKeyDown((KeyCode)System.Enum.Parse(typeof(KeyCode), globalSettings.ToggleStaticCameraKey, true))) {
                 ToggleStaticCamera();
             }
         }
@@ -135,7 +134,7 @@ namespace StaticCamera {
         }
     }
 
-    public class LocalSettings: ModSettings {
+    public class GlobalSettings: ModSettings {
         public string ToggleStaticCameraKey = KeyCode.G.ToString();
     }
 }
