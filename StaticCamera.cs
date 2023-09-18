@@ -1,4 +1,5 @@
 using Modding;
+using GlobalEnums;
 using System.Reflection;
 using UnityEngine;
 using CamControllerCameraMode = CameraController.CameraMode;
@@ -13,6 +14,10 @@ namespace StaticCamera {
         private CamControllerCameraMode? prevCamCtrlMode;
         private CamTargetMode? prevCamTargetMode;
         private bool wasCameraFollow = false;
+        private bool heroInPositionHookAdded = false;
+        private bool hazardRespawning = false;
+        private Vector3 cameraLocationBeforeHazardRespawn;
+        private Vector3 camTargetLocationBeforeHazardRespawn;
         // private bool wasStaticBeforeSceneChange = false;
         private DebugModInteraction debugModInteraction;
         private bool isDebugModInstalled;
@@ -47,20 +52,19 @@ namespace StaticCamera {
         public void HeroUpdate() {
             if (cameraController == null) {
                 cameraController = GameManager.instance.cameraCtrl;
+            } else {
+                if (isStatic && (cameraController.cam.transform.position != cameraLocationBeforeHazardRespawn || cameraController.camTarget.transform.position != camTargetLocationBeforeHazardRespawn)) {
+                    cameraController.cam.transform.position = cameraLocationBeforeHazardRespawn;
+                    cameraController.camTarget.transform.position = camTargetLocationBeforeHazardRespawn;
+                }
+                if (isStatic && (cameraController.mode != CamControllerCameraMode.FROZEN || cameraController.camTarget.mode != CamTargetMode.FREE)) {
+                    cameraController.SetMode(CamControllerCameraMode.FROZEN);
+                    cameraController.camTarget.mode = CamTargetMode.FREE;
+                }
             }
-
-            // if (!heroInPositionHookAdded && HeroController.instance) {
-            //     HeroController.instance.heroInPosition += HeroInPosition;
-            //     heroInPositionHookAdded = true;
-            // }
 
             if (Input.GetKeyDown((KeyCode)System.Enum.Parse(typeof(KeyCode), localSettings.ToggleStaticCameraKey, true))) {
                 ToggleStaticCamera();
-            }
-
-            if (isStatic && (cameraController.mode != CamControllerCameraMode.FROZEN || cameraController.camTarget.mode != CamTargetMode.FREE)) {
-                cameraController.SetMode(CamControllerCameraMode.FROZEN);
-                cameraController.camTarget.mode = CamTargetMode.FREE;
             }
         }
 
@@ -76,6 +80,8 @@ namespace StaticCamera {
             if (isStatic) {
                 prevCamCtrlMode = cameraController.mode;
                 prevCamTargetMode = cameraController.camTarget.mode;
+                cameraLocationBeforeHazardRespawn = cameraController.cam.transform.position;
+                camTargetLocationBeforeHazardRespawn = cameraController.camTarget.transform.position;
 
                 if (isDebugModInstalled && debugModInteraction.IsCameraFollowEnabled()) {
                     wasCameraFollow = true;
@@ -98,10 +104,24 @@ namespace StaticCamera {
             }
         }
 
-        // public void HeroInPosition(bool _) {
-        //     if (wasStaticBeforeSceneChange) {
-        //         ToggleStaticCamera();
-        //         wasStaticBeforeSceneChange = false;
+        // public int AfterTakeDamage(int hazardType, int damageAmount) {
+        //     if (isStatic && hazardType > 1) {
+        //         hazardRespawning = true;
+        //         cameraLocationBeforeHazardRespawn = cameraController.cam.transform.position;
+        //         camTargetLocationBeforeHazardRespawn = cameraController.camTarget.transform.position;
+        //     }
+        //     return damageAmount;
+        // }
+
+        // public void PositionToHero(On.CameraController.orig_PositionToHero orig, CameraController self, bool forceDirect) {
+        //     orig(self, forceDirect);
+
+        //     if (hazardRespawning) {
+        //         cameraController.cam.transform.position = cameraLocationBeforeHazardRespawn;
+        //         cameraController.camTarget.transform.position = camTargetLocationBeforeHazardRespawn;
+        //         hazardRespawning = false;
+        //         cameraController.FreezeInPlace(true);
+        //         cameraGameplayScene.SetValue(cameraController, false);
         //     }
         // }
 
