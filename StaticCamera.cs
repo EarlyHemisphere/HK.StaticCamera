@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace StaticCamera {
-    public class StaticCamera: Mod, ICustomMenuMod, ILocalSettings<LocalSettings> {
+    public class StaticCamera: Mod, ICustomMenuMod, IGlobalSettings<GlobalSettings> {
         private Menu menuRef;
         public static StaticCamera instance;
         private static CameraController cameraController = null;
@@ -45,9 +45,9 @@ namespace StaticCamera {
 
         public bool ToggleButtonInsideMenu => false;
 
-        public static LocalSettings localSettings { get; private set; } = new();
-        public void OnLoadLocal(LocalSettings s) => localSettings = s;
-        public LocalSettings OnSaveLocal() => localSettings;
+        public static GlobalSettings globalSettings { get; private set; } = new();
+        public void OnLoadGlobal(GlobalSettings s) => globalSettings = s;
+        public GlobalSettings OnSaveGlobal() => globalSettings;
 
         public MenuScreen GetMenuScreen(MenuScreen modListMenu, ModToggleDelegates? toggleDelegates) {
             menuRef ??= new Menu(
@@ -55,8 +55,8 @@ namespace StaticCamera {
                 elements: new Element[] {
                     Blueprints.KeyAndButtonBind(
                         name: "Toggle Static Camera",
-                        keyBindAction: localSettings.keyBinds.ToggleStaticCameraKey,
-                        buttonBindAction: localSettings.keyBinds.ToggleStaticCameraBtn
+                        keyBindAction: globalSettings.keyBinds.ToggleStaticCameraKey,
+                        buttonBindAction: globalSettings.keyBinds.ToggleStaticCameraBtn
                     )
                 }
             );
@@ -74,7 +74,7 @@ namespace StaticCamera {
             //     heroInPositionHookAdded = true;
             // }
 
-            if (localSettings.keyBinds.ToggleStaticCameraKey.WasPressed || localSettings.keyBinds.ToggleStaticCameraBtn.WasPressed) {
+            if (globalSettings.keyBinds.ToggleStaticCameraKey.WasPressed || globalSettings.keyBinds.ToggleStaticCameraBtn.WasPressed) {
                 ToggleStaticCamera();
             }
 
@@ -135,7 +135,7 @@ namespace StaticCamera {
         }
     }
 
-    public class LocalSettings {
+    public class GlobalSettings {
         [JsonConverter(typeof(PlayerActionSetConverter))]
         public KeyBinds keyBinds = new KeyBinds();
     }
