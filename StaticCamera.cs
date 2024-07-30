@@ -55,8 +55,8 @@ namespace StaticCamera {
                 elements: new Element[] {
                     Blueprints.KeyAndButtonBind(
                         name: "Toggle Static Camera",
-                        keyBindAction: localSettings.keyBinds.ToggleStaticCamera,
-                        buttonBindAction: localSettings.keyBinds.ToggleStaticCamera
+                        keyBindAction: localSettings.keyBinds.ToggleStaticCameraKey,
+                        buttonBindAction: localSettings.keyBinds.ToggleStaticCameraBtn
                     )
                 }
             );
@@ -74,7 +74,7 @@ namespace StaticCamera {
             //     heroInPositionHookAdded = true;
             // }
 
-            if (localSettings.keyBinds.ToggleStaticCamera.WasPressed) {
+            if (localSettings.keyBinds.ToggleStaticCameraKey.WasPressed || localSettings.keyBinds.ToggleStaticCameraBtn.WasPressed) {
                 ToggleStaticCamera();
             }
 
@@ -141,10 +141,12 @@ namespace StaticCamera {
     }
 
     public class KeyBinds : PlayerActionSet {
-        public PlayerAction ToggleStaticCamera;
+        public PlayerAction ToggleStaticCameraKey;
+        public PlayerAction ToggleStaticCameraBtn;
 
         public KeyBinds() {
-            ToggleStaticCamera = CreatePlayerAction("ToggleStaticCamera");
+            ToggleStaticCameraKey = CreatePlayerAction("ToggleStaticCameraKey");
+            ToggleStaticCameraBtn = CreatePlayerAction("ToggleStaticCameraBtn");
         }
     }
 }
