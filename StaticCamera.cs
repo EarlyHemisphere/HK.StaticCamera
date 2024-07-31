@@ -22,7 +22,7 @@ namespace StaticCamera {
         private CamTargetMode? prevCamTargetMode = null;
         private bool wasCameraFollow = false;
         // private bool wasStaticBeforeSceneChange = false;
-        private DebugModInteraction debugModInteraction;
+        private DebugModInteraction? debugModInteraction;
         private bool isDebugModInstalled;
         // private bool heroInPositionHookAdded = false;
 
@@ -35,8 +35,9 @@ namespace StaticCamera {
 
             ModHooks.HeroUpdateHook += HeroUpdate;
             ModHooks.BeforeSceneLoadHook += UnlockForSceneChange;
-            debugModInteraction = new DebugModInteraction();
-            isDebugModInstalled = debugModInteraction.IsDebugModInstalled();
+            if (ModHooks.GetMod("DebugMod") is Mod) {
+                debugModInteraction = new DebugModInteraction();
+            }
 
             Log("Initialized");
         }
@@ -97,7 +98,7 @@ namespace StaticCamera {
                 prevCamCtrlMode = cameraController.mode;
                 prevCamTargetMode = cameraController.camTarget.mode;
 
-                if (isDebugModInstalled && debugModInteraction.IsCameraFollowEnabled()) {
+                if (debugModInteraction != null && debugModInteraction.IsCameraFollowEnabled()) {
                     wasCameraFollow = true;
                     debugModInteraction.ToggleCameraFollow();
                 }
@@ -113,7 +114,7 @@ namespace StaticCamera {
 
                 if (wasCameraFollow) {
                     wasCameraFollow = false;
-                    debugModInteraction.ToggleCameraFollow();
+                    debugModInteraction?.ToggleCameraFollow();
                 }
             }
         }
